@@ -1,0 +1,66 @@
+name: Build Android APK
+
+# Triggers:
+#   1. Push a version tag (e.g. `git tag v1.0.0 && git push origin v1.0.0`)
+#      -> builds the APK AND publishes it to a GitHub Release.
+#   2. Manual "Run workflow" button in the Actions tab
+#      -> builds the APK and attaches it to this run (no Release created).
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed to create a Release and upload the APK to it
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Java (required by Gradle/Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install JS dependencies
+        run: npm install
+
+      # Generates the native android/ project from app.json.
+      # This repo intentionally does NOT commit android/ or ios/ (see
+      # .gitignore) so it always regenerates cleanly from the Expo config.
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android --non-interactive
+
+      # Uses the standard Android debug keystore that ships with every
+      # Android project, so no signing secrets need to be configured.
+      # A debug-signed APK installs and runs fine via sideloading — this is
+      # NOT suitable for publishing to the Google Play Store, only for
+      # sharing directly (e.g. as a GitHub Release download).
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK for the release
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk find-the-imposter.apk
+
+      - name: Upload APK as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: find-the-imposter-apk
+          path: find-the-imposter.apk
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: find-the-imposter.apk
+          generate_release_notes: true
