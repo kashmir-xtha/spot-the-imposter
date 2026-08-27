@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Find the Imposter",
+    "slug": "find-the-imposter",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0A0A0D",
+    "ios": {
+      "supportsTablet": true,
+      "backgroundColor": "#0A0A0D"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0D"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
