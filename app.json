@@ -2,7 +2,7 @@
   "expo": {
     "name": "Find the Imposter",
     "slug": "find-the-imposter",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -13,8 +13,9 @@
     },
     "android": {
       "package": "com.findtheimposter.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FFFFFF"
       },
       "predictiveBackGestureEnabled": false
@@ -28,7 +29,7 @@
         {
           "image": "./assets/splash-icon.png",
           "backgroundColor": "#FFFFFF",
-          "imageWidth": 200
+          "imageWidth": 300
         }
       ]
     ]
