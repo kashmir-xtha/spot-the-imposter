@@ -42,15 +42,21 @@ jobs:
 
       # Uses the standard Android debug keystore that ships with every
       # Android project, so no signing secrets need to be configured.
-      # A debug-signed APK installs and runs fine via sideloading — this is
-      # NOT suitable for publishing to the Google Play Store, only for
-      # sharing directly (e.g. as a GitHub Release download).
-      - name: Build debug APK
+      # IMPORTANT: this must be `assembleRelease`, not `assembleDebug`.
+      # The debug build variant does NOT bundle the JavaScript into the APK —
+      # it expects a live Metro dev server on your computer, which is why a
+      # sideloaded debug APK fails with "Unable to load script". The release
+      # variant bundles the JS via Hermes at build time (still signed with
+      # the debug keystore, since no release signing config is set up here),
+      # producing a real standalone APK. This is fine for sideloading —
+      # NOT suitable for publishing to the Google Play Store, which requires
+      # a proper release keystore.
+      - name: Build release APK
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Rename APK for the release
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk find-the-imposter.apk
+        run: cp android/app/build/outputs/apk/release/app-release.apk find-the-imposter.apk
 
       - name: Upload APK as a workflow artifact
         uses: actions/upload-artifact@v4

@@ -93,10 +93,11 @@ You can also trigger it manually from the **Actions** tab ("Run workflow")
 without tagging — the APK is attached to that run as a downloadable artifact
 instead of a Release.
 
-This produces a **debug-signed APK** — perfectly fine for sideloading and
-sharing directly, but not accepted by the Google Play Store (that needs a
-release keystore, which is intentionally not set up here to avoid managing
-signing secrets for a personal project).
+This produces a **release build, signed with the auto-generated debug
+keystore** — perfectly fine for sideloading and sharing directly, but not
+accepted by the Google Play Store (that needs a real release keystore, which
+is intentionally not set up here to avoid managing signing secrets for a
+personal project).
 
 ### Option B — EAS Build (Expo's cloud build service)
 
@@ -119,7 +120,14 @@ Requires Android Studio / the Android SDK installed:
 ```bash
 npx expo prebuild --platform android
 cd android
-./gradlew assembleDebug
-# APK lands at android/app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleRelease
+# APK lands at android/app/build/outputs/apk/release/app-release.apk
 ```
+
+⚠️ Use `assembleRelease`, not `assembleDebug`. A debug build doesn't embed
+the JavaScript bundle — it expects a live Metro dev server on your computer
+and will fail with "Unable to load script" if you try to sideload it
+standalone. `assembleRelease` bundles the JS via Hermes at build time (still
+signed with the auto-generated debug keystore, so no signing setup is
+needed) and produces a real standalone APK.
 
