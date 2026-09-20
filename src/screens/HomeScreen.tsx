@@ -11,8 +11,8 @@ import { colors, fontSizes, fontWeights, letterSpacing, spacing } from '../const
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: Props) {
-  const { state, isConfigValid, categoryLabel, startGame } = useGame();
-  const { playerCount, imposterCount } = state.settings;
+  const { state, isConfigValid, categoryLabel, imposterLabel, startGame } = useGame();
+  const { playerCount, chaosMode } = state.settings;
 
   const handleStart = () => {
     if (!isConfigValid) return;
@@ -45,9 +45,9 @@ export default function HomeScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('Categories')}
         />
         <GameSettingCard
-          icon="person-remove-outline"
+          icon={chaosMode ? 'flame' : 'person-remove-outline'}
           title="IMPOSTERS"
-          subtitle={`${imposterCount} Imposter${imposterCount > 1 ? 's' : ''}`}
+          subtitle={imposterLabel}
           onPress={() => navigation.navigate('Imposters')}
         />
       </View>
