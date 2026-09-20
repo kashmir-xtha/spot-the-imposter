@@ -29,6 +29,12 @@ export type GameSettings = {
   imposterCount: number;
   selectedCategoryIds: CategoryId[];
   playerNames: string[];
+  /**
+   * When true, the imposter count is randomized fresh at the start of every
+   * game (1 up to floor(50% of players)) instead of using `imposterCount`.
+   * Nobody knows the no. of imposters.
+   */
+  chaosMode: boolean;
 };
 
 export type GamePhase =

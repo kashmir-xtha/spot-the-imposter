@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
-import { GamePhase, GameState, Player } from '../types';
+import { GamePhase, GameSettings, GameState, Player } from '../types';
 import { avatars } from '../data/avatars';
 import { ALL_CATEGORIES_ID, categories } from '../data/categories';
 import { getEntityPool } from '../data/entities';
@@ -8,11 +8,35 @@ import { assignUnique, pickRandom, pickUniqueIndices } from '../utils/random';
 export const MIN_PLAYERS = 3;
 export const MAX_PLAYERS = 20;
 export const MIN_IMPOSTERS = 1;
+export const CHAOS_MAX_RATIO = 0.5;
 
 const allCategoryIds = categories.map((c) => c.id);
 
 function defaultPlayerNames(count: number): string[] {
   return Array.from({ length: count }, (_, i) => `Player ${i + 1}`);
+}
+
+/**
+ * The top of the Chaos Mode range: floor(50% of players), never less than 1.
+ * Exported so screens can display the same range the reducer will actually
+ * randomize within.
+ */
+export function getMaxChaosImposters(playerCount: number): number {
+  return Math.max(MIN_IMPOSTERS, Math.floor(playerCount * CHAOS_MAX_RATIO));
+}
+
+/**
+ * Resolves how many imposters a game should actually have. In Chaos Mode
+ * this is randomized fresh every call (1 up to getMaxChaosImposters), so the
+ * exact count is never known ahead of time — not even by the host, since it
+ * happens the moment the game starts.
+ */
+function resolveImposterCount(settings: GameSettings): number {
+  if (settings.chaosMode) {
+    const max = getMaxChaosImposters(settings.playerCount);
+    return Math.floor(Math.random() * max) + 1;
+  }
+  return clampImposters(settings.imposterCount, settings.playerCount);
 }
 
 const initialState: GameState = {
@@ -25,6 +49,7 @@ const initialState: GameState = {
     imposterCount: 1,
     selectedCategoryIds: [ALL_CATEGORIES_ID],
     playerNames: defaultPlayerNames(MIN_PLAYERS),
+    chaosMode: false,
   },
   phase: 'setup',
 };
@@ -33,6 +58,7 @@ type Action =
   | { type: 'SET_PLAYER_COUNT'; count: number }
   | { type: 'SET_PLAYER_NAME'; index: number; name: string }
   | { type: 'SET_IMPOSTER_COUNT'; count: number }
+  | { type: 'SET_CHAOS_MODE'; enabled: boolean }
   | { type: 'TOGGLE_CATEGORY'; id: string }
   | { type: 'SELECT_ALL_CATEGORIES' }
   | { type: 'START_GAME' }
@@ -112,6 +138,12 @@ function reducer(state: GameState, action: Action): GameState {
         },
       };
     }
+    case 'SET_CHAOS_MODE': {
+      return {
+        ...state,
+        settings: { ...state.settings, chaosMode: action.enabled },
+      };
+    }
     case 'TOGGLE_CATEGORY': {
       const { selectedCategoryIds } = state.settings;
       if (action.id === ALL_CATEGORIES_ID) {
@@ -158,7 +190,7 @@ function reducer(state: GameState, action: Action): GameState {
         state.settings.playerNames.length === state.settings.playerCount
           ? state.settings.playerNames
           : defaultPlayerNames(state.settings.playerCount);
-      const { players } = buildPlayers(names, state.settings.imposterCount);
+      const { players } = buildPlayers(names, resolveImposterCount(state.settings));
 
       return {
         ...state,
@@ -201,6 +233,7 @@ type GameContextValue = {
   state: GameState;
   setPlayerCount: (count: number) => void;
   setImposterCount: (count: number) => void;
+  setChaosMode: (enabled: boolean) => void;
   toggleCategory: (id: string) => void;
   selectAllCategories: () => void;
   setPlayerName: (index: number, name: string) => void;
@@ -213,6 +246,7 @@ type GameContextValue = {
   isConfigValid: boolean;
   effectiveCategoryIds: string[];
   categoryLabel: string;
+  imposterLabel: string;
 };
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -226,6 +260,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const setImposterCount = useCallback((count: number) => {
     dispatch({ type: 'SET_IMPOSTER_COUNT', count });
+  }, []);
+
+  const setChaosMode = useCallback((enabled: boolean) => {
+    dispatch({ type: 'SET_CHAOS_MODE', enabled });
   }, []);
 
   const toggleCategory = useCallback((id: string) => {
@@ -270,13 +308,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   );
 
   const isConfigValid = useMemo(() => {
-    const { playerCount, imposterCount, selectedCategoryIds } = state.settings;
-    return (
-      playerCount >= MIN_PLAYERS &&
-      imposterCount >= MIN_IMPOSTERS &&
-      imposterCount <= playerCount &&
-      selectedCategoryIds.length > 0
-    );
+    const { playerCount, imposterCount, selectedCategoryIds, chaosMode } = state.settings;
+    const imposterValid = chaosMode || (imposterCount >= MIN_IMPOSTERS && imposterCount <= playerCount);
+    return playerCount >= MIN_PLAYERS && imposterValid && selectedCategoryIds.length > 0;
   }, [state.settings]);
 
   const categoryLabel = useMemo(() => {
@@ -290,10 +324,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return `${selectedCategoryIds.length} Categories`;
   }, [state.settings]);
 
+  const imposterLabel = useMemo(() => {
+    const { chaosMode, imposterCount, playerCount } = state.settings;
+    if (chaosMode) {
+      const max = getMaxChaosImposters(playerCount);
+      return max > 1 ? `Chaos Mode (1–${max})` : 'Chaos Mode';
+    }
+    return `${imposterCount} Imposter${imposterCount > 1 ? 's' : ''}`;
+  }, [state.settings]);
+
   const value: GameContextValue = {
     state,
     setPlayerCount,
     setImposterCount,
+    setChaosMode,
     toggleCategory,
     selectAllCategories,
     setPlayerName,
@@ -306,6 +350,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     isConfigValid,
     effectiveCategoryIds,
     categoryLabel,
+    imposterLabel,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
