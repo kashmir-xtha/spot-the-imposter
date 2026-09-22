@@ -57,12 +57,17 @@ export default function ImpostersScreen({ navigation }: Props) {
 
       {chaosMode ? (
         <View style={[styles.infoBox, styles.chaosInfoBox]}>
-          <Ionicons name="skull-outline" size={18} color={colors.danger} />
           <Text style={styles.infoText}>
             Each game will secretly pick between{' '}
             <Text style={styles.infoTextStrong}>1 and {maxChaosImposters}</Text> imposter
-            {maxChaosImposters > 1 ? 's' : ''} out of {playerCount} players (up to 50%). Nobody —
-            not even the host — knows the exact number until it's revealed at the end.
+            {maxChaosImposters > 1 ? 's' : ''} out of {playerCount} players (up to 50%). Nobody knows the exact number of imposter until it's revealed at the end.
+          </Text>
+          <Text style={styles.infoTextStrong}>Rules:</Text>
+          <Text style={styles.infoText}>
+            If the votes for <Text style={styles.infoTextStrong}>No Imposter</Text> and <Text style={styles.infoTextStrong}>Imposter Remaining</Text> are equal, discussion continues until one receives more votes.
+          </Text>
+          <Text style={styles.infoText}>
+            When only <Text style={styles.infoTextStrong}>{playerCount - maxChaosImposters}</Text> players remain, no more players can be voted out. If any imposter is still among the remaining players at this point, the imposter wins.
           </Text>
         </View>
       ) : (
@@ -175,7 +180,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   infoBox: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     backgroundColor: colors.cardAlt,
     borderRadius: radius.md,
     padding: spacing.lg,
