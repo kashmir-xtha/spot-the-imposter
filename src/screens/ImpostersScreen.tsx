@@ -62,12 +62,12 @@ export default function ImpostersScreen({ navigation }: Props) {
             <Text style={styles.infoTextStrong}>1 and {maxChaosImposters}</Text> imposter
             {maxChaosImposters > 1 ? 's' : ''} out of {playerCount} players (up to 50%). Nobody knows the exact number of imposter until it's revealed at the end.
           </Text>
-          <Text style={styles.infoTextStrong}>Rules:</Text>
+          <Text style={styles.infoText}><Text style={styles.infoTextStrong}>Rules:</Text></Text>
           <Text style={styles.infoText}>
-            If the votes for <Text style={styles.infoTextStrong}>No Imposter</Text> and <Text style={styles.infoTextStrong}>Imposter Remaining</Text> are equal, discussion continues until one receives more votes.
+            - If the votes for <Text style={styles.infoTextStrong}>No Imposter</Text> and <Text style={styles.infoTextStrong}>Imposter Remaining</Text> are equal, discussion continues until one receives more votes.
           </Text>
           <Text style={styles.infoText}>
-            When only <Text style={styles.infoTextStrong}>{playerCount - maxChaosImposters}</Text> players remain, no more players can be voted out. If any imposter is still among the remaining players at this point, the imposter wins.
+            - When only <Text style={styles.infoTextStrong}>{playerCount - maxChaosImposters}</Text> players remain, no more players can be voted out. If any imposter is still among the remaining players at this point, the imposter wins.
           </Text>
         </View>
       ) : (
@@ -86,7 +86,6 @@ export default function ImpostersScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
             <Text style={styles.infoText}>
               You can have between 1 and {playerCount} imposters. The imposter count automatically
               adjusts if you change the number of players.
@@ -191,11 +190,11 @@ const styles = StyleSheet.create({
     flex: 0,
   },
   infoText: {
-    flex: 1,
     color: colors.textSecondary,
     fontSize: fontSizes.sm,
     lineHeight: 19,
     marginLeft: spacing.sm,
+    marginBottom: spacing.sm,
   },
   infoTextStrong: {
     color: colors.textPrimary,
